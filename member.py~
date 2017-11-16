@@ -1,0 +1,179 @@
+#!/usr/bin/python
+
+from pyPdf import PdfFileWriter, PdfFileReader
+
+import sys, copy, string, os, fileinput
+
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+
+if len(sys.argv) == 1:
+	print "Du maa ha minst ett argument til dette programmet!!!"
+	print "python member.py <starnr> <pages> <liste>"
+	exit()
+
+output = PdfFileWriter()
+outputStream = file("medlemskort.pdf", "wb") #Output fil
+indexnr = 0;
+
+bottom_margin = 1*cm
+left_margin = 2*cm
+
+height=5.4*cm
+width=8.5*cm
+
+lengde = 20 #skal 20
+
+if len(sys.argv) > 3:
+	file_stub = sys.argv[3]
+
+if len(sys.argv) > 2:
+	pages = int(sys.argv[2])
+else:
+	pages = 1
+
+if len(sys.argv) > 1:
+	lopenr = int(sys.argv[1])
+else:
+	lopenr = 1
+
+
+# never got around dealing with stdin that comes unicode encoded from
+# aolserver, grr. The file approach works though.
+
+if len(sys.argv) > 3:
+#	lines = fileinput.input(file_stub + ".txt")
+#	print lines
+	f = open(file_stub +'.txt','r') # apner fil
+	names = f.read().split('\n') # Leser inn fra navneliste.
+	names.pop() # Fjerner siste tomme linje
+	lines = names
+	total = len(names)
+
+#Funksjon for aa lage bakside
+def bonecard(c,lope):
+    t = c.beginText()
+	#Bredde/hoyde
+    x = 2.5
+    c.drawImage("cyb_escape_v5r.eps", 0.1*cm,4*cm-70,543/x,248/x)
+    t.setTextOrigin(0.5*cm, 1.5*cm)
+    t.setFont("Helvetica", 7)
+    t.textLines("")
+    t.textLines(" ")
+    t.textLines("cyb.no/bli-aktiv")
+    c.drawText(t)
+
+
+    #c.rect(0, 0, width, height)
+
+
+#Funksjon for aa lage forsiden
+def onecard(c,lope,ind):
+    t = c.beginText()
+	#Bredde/hoyde
+    c.drawImage("cyb_logo.eps", 0.1*cm,5*cm-70,133,100)
+	#bredde/hoyde (fra bunn)
+    t.setTextOrigin(7*cm, 4.5*cm)
+    t.setFont("Helvetica-Bold", 20)
+    t.textLines("V11")
+    t.setFont("Helvetica", 12)
+    t.moveCursor(0, -12)
+    t.textLines("#%04d"%(lope))
+    t.setTextOrigin(0.5*cm, 2.5*cm)
+    t.setFont("Helvetica-Bold", 12)
+    if len(sys.argv) > 3 and ind<total:
+		t.textLines("Navn: "+ lines[ind])
+    else:
+		t.textLines("Navn: _____________________")
+    t.setFont("Helvetica-Oblique", 8)
+    t.moveCursor(0, 30)
+    t.textLines("Bevis for medlemsskap i Cybernetisk selskab")
+    c.drawText(t)
+
+    #c.rect(0, 0, width, height)
+
+#Lag grid
+def grid(c):
+    for i in range(0, 6):
+        y = bottom_margin + i * height
+        c.line(5, y, lengde, y)
+        c.line(A4[0] - 5, y, A4[0] - lengde, y)
+
+    for i in range(0, 3):
+        x = left_margin + i * width
+        c.line(x, 5, x, lengde)
+        c.line(x, A4[1] - 5, x, A4[1] - lengde)
+        
+
+for u in range(0, pages):        
+	c = canvas.Canvas("temp.pdf")
+
+	grid(c)
+	
+	
+	c.translate(left_margin, bottom_margin)
+	
+	c.saveState()
+	
+	for i in range(0, 5):
+	    onecard(c,lopenr,indexnr)
+	    lopenr+=1
+	    indexnr+=1
+	    c.translate(0, height)
+
+	c.restoreState()
+
+	c.translate(width, 0)
+	for i in range(0, 5):
+		onecard(c,lopenr,indexnr)
+		lopenr+=1
+		indexnr+=1
+		c.translate(0, height)
+	c.save()
+	
+	input1 = PdfFileReader(file("temp.pdf", "rb")) #Les forside aktiv
+	page = input1.getPage(0)
+	output.addPage(page)
+
+	#Begynn paa baksiden
+	d = canvas.Canvas("temp2.pdf")
+	
+	grid(d)	
+	
+	d.translate(left_margin, bottom_margin)
+	
+	d.saveState()
+	
+	for i in range(0, 5):
+	    bonecard(d,lopenr)
+	    d.translate(0, height)
+
+	d.restoreState()
+
+	d.translate(width, 0)
+	for i in range(0, 5):
+		bonecard(d,lopenr)
+		d.translate(0, height)
+	d.save()
+	
+	input1 = PdfFileReader(file("temp2.pdf", "rb")) #Les forside aktiv
+	page2 = input1.getPage(0)
+
+	output.addPage(page2)
+
+	#Skriv alt!
+	output.write(outputStream)
+
+
+c.save()
+#Rydd opp
+os.remove("temp.pdf")
+os.remove("temp2.pdf")
+
+outputStream.close()
+
