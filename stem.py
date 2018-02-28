@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-#coding: utf-8
+#!/usr/bin/env python3
+# coding: utf-8
 
 # Sett antall eksemplarer i "antall" variablen
 # Hvis programmet kjøres med et vilkårlig parameter
@@ -11,54 +11,57 @@ from reportlab.lib.pagesizes import A4
 from colorsys import hls_to_rgb
 import sys
 
-mengde = 70
+voteCount = 70
+ballotCount = 13
+year = "H2017"
+outputName = "stem.pdf"
 
-def forside(nr):
-    #antall eksemplarer
-    antall = 13
-    aarstall = "H2017"
+def createPage(voter):
 
-    a=(A4[0]/antall)
-    al=55 #Tekst mot midten, hoyere er mer mot midt
-    d.line(0, 150, A4[0], 150)
+    ballots = (A4[0] / ballotCount)
+    al = 55
+    document.line(0, 150, A4[0], 150)
     s = [0.1, 1, 0.2]
-    if len(sys.argv)<2:
-        for x in xrange(antall):
-            d.rotate(90)
-            d.drawString(25, -15+(-a*x), "Seddel %2s - %s" % ((x+1), aarstall))
-            #d.drawString(a*x+al-50, 130, "Seddel %s" % (x+1))
-            #d.drawString(a*x+al-50, 150, aarstall)
-            d.rotate(-90)
-            d.line(a*x, 150, a*x, 0)
-            #Her setter man fargene som skal være på stemmeseddele
+    if len(sys.argv) < 2:
+        for i in range(ballotCount):
+            document.rotate(90)
+            document.drawString(25, -15 + (-ballots * i), "Seddel %2s - %s" % ((i + 1), year))
+
+            document.rotate(-90)
+            document.line(ballots * i, 150, ballots * i, 0)
+
             saturation = [0.4, 0.75]
-            hls = hls_to_rgb(1.0/antall*x, saturation[x%2], 0.9)
-            #d.setFillColorRGB(x%2,0+(x/5.0),1-(1.0/(x+1)))
-            d.setFillColorRGB(hls[0], hls[1], hls[2])
-            d.roundRect((a*(x+1))-25,7.5,20,135,10,1,1)
-            d.setFillColorRGB(0,0,0)
+            hls = hls_to_rgb(1.0 / ballotCount * i, saturation[i % 2], 0.9)
 
-    d.setFont("Helvetica-Bold", 300)
-    if len(sys.argv)>1:
-        ekstra = "X"
-    else:
-        ekstra = ""
-    d.drawCentredString((A4[0]/2), (A4[1]/2)+40, ekstra+str(nr))
-    d.showPage()
-    
-    d.setFont("Helvetica-Bold", 300)
-    d.line(0, 150, A4[0], 150)
-    d.drawCentredString((A4[0]/2), (A4[1]/2)+40, ekstra+str(nr))
+            document.setFillColorRGB(hls[0], hls[1], hls[2])
+            document.roundRect((ballots * (i + 1)) - 25, 7.5, 20, 135, 10, 1, 1)
+            document.setFillColorRGB(0, 0, 0)
 
-    l=A4[0]/5
+    document.setFont("Helvetica-Bold", 300)
 
-    d.setLineWidth(10)
-    for x in xrange(5):
-        d.line(0+(l*x), A4[1], 0+(l*(x+1)), 150)
-    d.save()
-#BEGIN SCRIPT
-d = canvas.Canvas("temp.pdf",pagesize=A4)
+    append = ""
+    if len(sys.argv) > 1:
+        append = "X"
 
-for x in xrange(mengde):
-    forside(x+1)
-    d.save()
+    document.drawCentredString((A4[0] / 2), (A4[1] / 2) + 40, append + str(voter))
+    document.showPage()
+
+    document.setFont("Helvetica-Bold", 300)
+    document.line(0, 150, A4[0], 150)
+    document.drawCentredString((A4[0] / 2), (A4[1] / 2) + 40, append + str(voter))
+
+    lines = A4[0] / 5
+
+    document.setLineWidth(10)
+    for i in range(5):
+        document.line(0 + (lines * i), A4[1], 0 + (lines * (i + 1)), 150)
+
+    document.showPage()
+
+
+document = canvas.Canvas(outputName, pagesize=A4)
+
+for i in range(voteCount):
+    createPage(i + 1)
+
+document.save()
