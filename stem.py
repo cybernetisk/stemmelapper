@@ -11,7 +11,7 @@ from colorsys import hls_to_rgb
 import sys
 
 
-VOTE_COUNT = 70
+VOTE_COUNT = 50
 NON_MEMBER_COUNT = 20
 BALLOT_COUNT = 13
 YEAR = "V2019"
@@ -39,7 +39,6 @@ def _draw_ballots(amount: int):
 
         hue = 1.0 / (amount / 2) * (ballot // 2)
         hls = hls_to_rgb(hue if ballot % 2 else (hue + .5) % 1, 0.6, 0.8)
-
         document.setFillColorRGB(hls[0], hls[1], hls[2])
         document.roundRect((ballots * (ballot + 1)) - 25, 7.5, 20, 135, 10, 1, 1)
         document.setFillColorRGB(0, 0, 0)
@@ -62,10 +61,15 @@ def _draw_voter(voter: int, member: bool):
         (A4[1] / 2) + 40,
         "{}{}".format("" if member else "X", voter))
 
-def _draw_page_lines():
-    lines = A4[0] / 5
+
+def _draw_page_lines(amount_lines: int = 5):
+    """Draws lines accross the page
+
+    :param amount_lines: The amount of lines that will get created
+    """
+    lines = A4[0] / amount_lines
     document.setLineWidth(10)
-    for line_number in range(5):
+    for line_number in range(amount_lines):
         document.line(
             lines * line_number, A4[1],
             lines * (line_number + 1), 150
@@ -98,6 +102,7 @@ if __name__ == "__main__":
     for voter in range(1, VOTE_COUNT):
         create_slip(voter, member=True)
 
+    # These are for non-member participants of the general assembly
     for voter in range(1, NON_MEMBER_COUNT):
         create_slip(voter, member=False)
 
