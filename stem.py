@@ -13,12 +13,12 @@ import sys
 
 VOTE_COUNT = 50
 NON_MEMBER_COUNT = 20
-BALLOT_COUNT = 13
+BALLOT_COUNT = 10
 YEAR = "V2019"
 OUTPUT_NAME = "stem.pdf"
 
 
-def _draw_ballots(amount: int):
+def _draw_ballots_front(amount: int):
     """Draws ballots on the bottom of the page
 
     :param amount: The amount of ballots to create
@@ -26,25 +26,47 @@ def _draw_ballots(amount: int):
     # The line above the ballots
     document.line(0, 150, A4[0], 150)
 
-    ballots = A4[0] / amount
+    ballot_size = A4[0] / amount
     for ballot in range(amount):
         document.rotate(90)
         document.drawString(
-            25, -15 + (-ballots * ballot),
+            25, -15 + (-ballot_size * ballot),
             "Seddel {} - {}".format(ballot + 1, YEAR)
         )
 
         document.rotate(-90)
-        document.line(ballots * ballot, 150, ballots * ballot, 0)
-
         hue = 1.0 / (amount / 2) * (ballot // 2)
         hls = hls_to_rgb(hue if ballot % 2 else (hue + .5) % 1, 0.6, 0.8)
         document.setFillColorRGB(hls[0], hls[1], hls[2])
-        document.roundRect((ballots * (ballot + 1)) - 25, 7.5, 20, 135, 10, 1, 1)
+        document.roundRect((ballot_size * (ballot + 1)) - 25, 7.5, 20, 135, 10, 1, 1)
         document.setFillColorRGB(0, 0, 0)
 
         # Separator to next ballot
-        document.line(ballots * ballot, 150, ballots * ballot, 0)
+        document.line(ballot_size * ballot, 150, ballot_size * ballot, 0)
+
+
+def _draw_ballots_back(amount: int, choices: int = 3):
+    """Draws ballots on the bottom of the page
+
+    :param amount: The amount of ballots to create
+    """
+    # The line above the ballots
+    document.line(0, 150, A4[0], 150)
+
+    ballot_size = A4[0] / amount
+    for ballot in range(amount):
+
+        document.rotate(90)
+        # Create the choice
+        for choice in range(choices):
+            document.drawString(
+                5, -10 - (ballot_size * choice / choices) - ballot_size * ballot,
+                "{}.".format(choice + 1)
+            )
+
+        document.rotate(-90)
+        # Separator to next ballot
+        document.line(ballot_size * ballot, 150, ballot_size * ballot, 0)
 
 
 def _draw_voter(voter: int, member: bool):
@@ -84,12 +106,14 @@ def create_slip(voter: int, *, member: bool):
     """
     # Front page
     if member:
-        _draw_ballots(BALLOT_COUNT)
+        _draw_ballots_front(BALLOT_COUNT)
     document.setFont("Helvetica-Bold", 300)
     _draw_voter(voter, member)
     document.showPage()
 
     # Back page
+    if member:
+        _draw_ballots_back(BALLOT_COUNT)
     document.setFont("Helvetica-Bold", 300)
     _draw_voter(voter, member)
     _draw_page_lines()
