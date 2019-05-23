@@ -17,6 +17,8 @@ BALLOT_COUNT = 10
 YEAR = "V2019"
 OUTPUT_NAME = "stem.pdf"
 
+BALLOT_HEIGHT = 200
+
 
 def _draw_ballots_front(amount: int):
     """Draws ballots on the bottom of the page
@@ -24,13 +26,13 @@ def _draw_ballots_front(amount: int):
     :param amount: The amount of ballots to create
     """
     # The line above the ballots
-    document.line(0, 150, A4[0], 150)
+    document.line(0, BALLOT_HEIGHT, A4[0], BALLOT_HEIGHT)
 
     ballot_size = A4[0] / amount
     for ballot in range(amount):
         document.rotate(90)
-        document.drawString(
-            25, -15 + (-ballot_size * ballot),
+        document.drawCentredString(
+            BALLOT_HEIGHT / 2, -15 + (-ballot_size * ballot),
             "Seddel {} - {}".format(ballot + 1, YEAR)
         )
 
@@ -38,35 +40,43 @@ def _draw_ballots_front(amount: int):
         hue = 1.0 / (amount / 2) * (ballot // 2)
         hls = hls_to_rgb(hue if ballot % 2 else (hue + .5) % 1, 0.6, 0.8)
         document.setFillColorRGB(hls[0], hls[1], hls[2])
-        document.roundRect((ballot_size * (ballot + 1)) - 25, 7.5, 20, 135, 10, 1, 1)
+        document.roundRect((ballot_size * (ballot + 1)) - 25, 7.5, 20, BALLOT_HEIGHT - 15, 10, 1, 1)
         document.setFillColorRGB(0, 0, 0)
 
         # Separator to next ballot
-        document.line(ballot_size * ballot, 150, ballot_size * ballot, 0)
+        document.line(ballot_size * ballot, BALLOT_HEIGHT, ballot_size * ballot, 0)
 
 
-def _draw_ballots_back(amount: int, choices: int = 3):
+def _draw_ballots_back(amount: int, choices: int = 6):
     """Draws ballots on the bottom of the page
 
     :param amount: The amount of ballots to create
     """
     # The line above the ballots
-    document.line(0, 150, A4[0], 150)
+    document.line(0, BALLOT_HEIGHT, A4[0], BALLOT_HEIGHT)
 
     ballot_size = A4[0] / amount
     for ballot in range(amount):
 
         document.rotate(90)
         # Create the choice
-        for choice in range(choices):
+        for choice in range(0, choices // 2):
             document.drawString(
-                5, -10 - (ballot_size * choice / choices) - ballot_size * ballot,
+                5,
+                -15 - (ballot_size * (choice - choices // 2) / (choices // 2)) - ballot_size * (ballot + 1),
+                "{}.".format(choice + 1)
+            )
+
+        for choice in range(choices // 2, choices):
+            document.drawString(
+                BALLOT_HEIGHT / 2,
+                -15 - (ballot_size * (choice - choices // 2) / (choices // 2)) - ballot_size * ballot,
                 "{}.".format(choice + 1)
             )
 
         document.rotate(-90)
         # Separator to next ballot
-        document.line(ballot_size * ballot, 150, ballot_size * ballot, 0)
+        document.line(ballot_size * ballot, BALLOT_HEIGHT, ballot_size * ballot, 0)
 
 
 def _draw_voter(voter: int, member: bool):
@@ -94,7 +104,7 @@ def _draw_page_lines(amount_lines: int = 5):
     for line_number in range(amount_lines):
         document.line(
             lines * line_number, A4[1],
-            lines * (line_number + 1), 150
+            lines * (line_number + 1), BALLOT_HEIGHT
         )
 
 
