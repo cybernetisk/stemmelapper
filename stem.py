@@ -10,14 +10,14 @@ from reportlab.lib.pagesizes import A4
 from colorsys import hls_to_rgb
 import sys
 
-
-VOTE_COUNT = 50
-NON_MEMBER_COUNT = 20
-BALLOT_COUNT = 10
-YEAR = "V2019"
+BASE_NR = 0
+VOTE_COUNT = 55 - BASE_NR
+NON_MEMBER_COUNT = 15
+BALLOT_COUNT = 12
+YEAR = "V2023"
 OUTPUT_NAME = "stem.pdf"
 
-BALLOT_HEIGHT = 200
+BALLOT_HEIGHT = 250
 
 
 def _draw_ballots_front(amount: int):
@@ -116,24 +116,24 @@ def create_slip(voter: int, *, member: bool):
     """
     # Front page
     if member:
-        _draw_ballots_front(BALLOT_COUNT)
+        _draw_ballots_front(BALLOT_COUNT) #lager stemmebiten av seddlene
     document.setFont("Helvetica-Bold", 300)
-    _draw_voter(voter, member)
+    _draw_voter(voter, member) #Lager nummeret på forsiden
     document.showPage()
 
     # Back page
     if member:
-        _draw_ballots_back(BALLOT_COUNT)
+        _draw_ballots_back(BALLOT_COUNT) #lager stemmebiten av seddlene
     document.setFont("Helvetica-Bold", 300)
-    _draw_voter(voter, member)
-    _draw_page_lines()
+    _draw_voter(voter, member) #Lager nummeret på baksiden
+    _draw_page_lines() #Lager linjene på baksiden
     document.showPage()
 
 
 if __name__ == "__main__":
     document = canvas.Canvas(OUTPUT_NAME, pagesize=A4)
 
-    for voter in range(1, VOTE_COUNT):
+    for voter in range(BASE_NR, BASE_NR+VOTE_COUNT):
         create_slip(voter, member=True)
 
     # These are for non-member participants of the general assembly
